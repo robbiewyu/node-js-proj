@@ -1,0 +1,20 @@
+{
+    "name": "node_js_proj",
+    "version": "1.0.0",
+    "description": "Tasks handling API",
+    "main": "src/app.js",
+    "scripts": {
+        "start": "node src/app.js",
+        "dev": "nodemon src/app.js"
+    },
+    "dependencies": {
+        "@fastify/swagger": "^8.15.0",
+        "@fastify/swagger-ui": "^2.1.0",
+        "bcrypt": "^6.0.0",
+        "fastify": "^4.29.1",
+        "jsonwebtoken": "^9.0.2"
+    },
+    "devDependencies": {
+        "nodemon": "3.1.10"
+    }
+}
