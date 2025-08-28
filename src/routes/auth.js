@@ -1,7 +1,14 @@
-const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
 const userModel = require('../models/users');
+const {
+  validateUserRegistration,
+  validateUserLogin,
+  checkUserExists,
+  validateUserCredentials,
+  hashPassword,
+  isValidationError
+} = require('../plugins/validators');
 
 // JWT secret (use environment variable in production)
 const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key';
@@ -14,9 +21,8 @@ async function routes(fastify, options) {
       tags: ['auth'],
       body: {
         type: 'object',
-        required: ['username', 'email', 'password'],
+        required: ['email', 'password'],
         properties: {
-          username: { type: 'string', minLength: 3, maxLength: 30 },
           email: { type: 'string', format: 'email' },
           password: { type: 'string', minLength: 6 }
         }
@@ -32,8 +38,8 @@ async function routes(fastify, options) {
               type: 'object',
               properties: {
                 id: { type: 'number' },
-                username: { type: 'string' },
-                email: { type: 'string' }
+                email: { type: 'string' },
+                createdAt: { type: 'string', format: 'date-time' }
               }
             }
           }
@@ -50,29 +56,21 @@ async function routes(fastify, options) {
     }
   }, async (request, reply) => {
     try {
-      const { username, email, password } = request.body;
-
+      // Validate and sanitize user registration data
+      const validatedData = validateUserRegistration(request.body);
+      
       // Check if user already exists
-      const existingUser = userModel.getUserByEmail(email) || userModel.getUserByUsername(username);
-
-      if (existingUser) {
-        return reply.status(400).send({
-          success: false,
-          message: 'User with this email or username already exists'
-        });
-      }
+      checkUserExists(userModel, validatedData.email);
 
       // Hash password
-      const saltRounds = 10;
-      const hashedPassword = await bcrypt.hash(password, saltRounds);
+      const hashedPassword = await hashPassword(validatedData.password);
 
       // Create new user
       const newUser = {
         id: userModel.getUsers().length + 1,
-        username,
-        email,
+        email: validatedData.email,
         password: hashedPassword,
-        createdAt: new Date()
+        createdAt: validatedData.createdAt
       };
 
       userModel.addUser(newUser);
@@ -87,6 +85,13 @@ async function routes(fastify, options) {
       });
 
     } catch (error) {
+      if (isValidationError(error)) {
+        return reply.status(400).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
       fastify.log.error(error);
       return reply.status(500).send({
         success: false,
@@ -120,8 +125,8 @@ async function routes(fastify, options) {
               type: 'object',
               properties: {
                 id: { type: 'number' },
-                username: { type: 'string' },
-                email: { type: 'string' }
+                email: { type: 'string' },
+                createdAt: { type: 'string', format: 'date-time' }
               }
             }
           }
@@ -138,34 +143,17 @@ async function routes(fastify, options) {
     }
   }, async (request, reply) => {
     try {
-      const { email, password } = request.body;
+      // Validate and sanitize login data
+      const validatedData = validateUserLogin(request.body);
 
-      // Find user by email
-      const user = userModel.getUserByEmail(email);
-
-      if (!user) {
-        return reply.status(401).send({
-          success: false,
-          message: 'Invalid email or password'
-        });
-      }
-
-      // Verify password
-      const isValidPassword = await bcrypt.compare(password, user.password);
-
-      if (!isValidPassword) {
-        return reply.status(401).send({
-          success: false,
-          message: 'Invalid email or password'
-        });
-      }
+      // Validate user credentials
+      const user = await validateUserCredentials(userModel, validatedData.email, validatedData.password);
 
       // Generate JWT token
       const token = jwt.sign(
         { 
           userId: user.id, 
-          email: user.email,
-          username: user.username
+          email: user.email
         },
         JWT_SECRET,
         { expiresIn: '24h' }
@@ -182,6 +170,20 @@ async function routes(fastify, options) {
       });
 
     } catch (error) {
+      if (isValidationError(error)) {
+        return reply.status(400).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
+      if (error.statusCode === 401) {
+        return reply.status(401).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
       fastify.log.error(error);
       return reply.status(500).send({
         success: false,

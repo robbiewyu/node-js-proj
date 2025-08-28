@@ -1,5 +1,11 @@
 const { verifyToken } = require('../middleware/auth');
 const taskModel = require('../models/tasks');
+const {
+  validateTaskCreate,
+  validateTaskUpdate,
+  validateTaskOwnership,
+  isValidationError
+} = require('../plugins/validators');
 
 async function routes(fastify, options) {
   // GET /api/tasks - Get all user's tasks
@@ -105,14 +111,10 @@ async function routes(fastify, options) {
     }
   }, async (request, reply) => {
     try {
-      const { title, description, completed } = request.body;
+      // Validate and sanitize task creation data
+      const validatedData = validateTaskCreate(request.body, request.user.userId);
       
-      const newTask = taskModel.createTask({
-        title,
-        description,
-        completed,
-        userId: request.user.userId
-      });
+      const newTask = taskModel.createTask(validatedData);
 
       return reply.status(201).send({
         success: true,
@@ -121,6 +123,13 @@ async function routes(fastify, options) {
       });
 
     } catch (error) {
+      if (isValidationError(error)) {
+        return reply.status(400).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
       if (error.message.includes('Validation failed')) {
         return reply.status(400).send({
           success: false,
@@ -191,25 +200,15 @@ async function routes(fastify, options) {
   }, async (request, reply) => {
     try {
       const taskId = parseInt(request.params.id);
-      const updateData = request.body;
 
       // Check if task exists and belongs to the user
       const existingTask = taskModel.getTaskById(taskId);
-      if (!existingTask) {
-        return reply.status(404).send({
-          success: false,
-          message: 'Task not found'
-        });
-      }
+      validateTaskOwnership(existingTask, request.user.userId);
 
-      if (existingTask.userId !== request.user.userId) {
-        return reply.status(403).send({
-          success: false,
-          message: 'Access denied: You can only update your own tasks'
-        });
-      }
+      // Validate and sanitize update data
+      const validatedUpdateData = validateTaskUpdate(request.body);
 
-      const updatedTask = taskModel.updateTaskById(taskId, updateData);
+      const updatedTask = taskModel.updateTaskById(taskId, validatedUpdateData);
 
       return {
         success: true,
@@ -218,6 +217,27 @@ async function routes(fastify, options) {
       };
 
     } catch (error) {
+      if (isValidationError(error)) {
+        return reply.status(400).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
+      if (error.statusCode === 404) {
+        return reply.status(404).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
+      if (error.statusCode === 403) {
+        return reply.status(403).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
       if (error.message.includes('Validation failed')) {
         return reply.status(400).send({
           success: false,
@@ -283,19 +303,7 @@ async function routes(fastify, options) {
 
       // Check if task exists and belongs to the user
       const existingTask = taskModel.getTaskById(taskId);
-      if (!existingTask) {
-        return reply.status(404).send({
-          success: false,
-          message: 'Task not found'
-        });
-      }
-
-      if (existingTask.userId !== request.user.userId) {
-        return reply.status(403).send({
-          success: false,
-          message: 'Access denied: You can only delete your own tasks'
-        });
-      }
+      validateTaskOwnership(existingTask, request.user.userId);
 
       const deletedTask = taskModel.deleteTaskById(taskId);
 
@@ -306,6 +314,20 @@ async function routes(fastify, options) {
       };
 
     } catch (error) {
+      if (error.statusCode === 404) {
+        return reply.status(404).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
+      if (error.statusCode === 403) {
+        return reply.status(403).send({
+          success: false,
+          message: error.message
+        });
+      }
+      
       fastify.log.error(error);
       return reply.status(500).send({
         success: false,

@@ -2,39 +2,13 @@
 const tasks = [];
 let taskIdCounter = 1;
 
-// Task validation function
-const validateTask = (taskData) => {
-  const errors = [];
-  
-  if (!taskData.title || typeof taskData.title !== 'string' || taskData.title.trim() === '') {
-    errors.push('Title is required and must be a non-empty string');
-  }
-  
-  if (taskData.description !== undefined && typeof taskData.description !== 'string') {
-    errors.push('Description must be a string');
-  }
-  
-  if (taskData.completed !== undefined && typeof taskData.completed !== 'boolean') {
-    errors.push('Completed must be a boolean');
-  }
-  
-  if (!taskData.userId || typeof taskData.userId !== 'number') {
-    errors.push('UserId is required and must be a number');
-  }
-  
-  return errors;
-};
-
 // Create a new task
 const createTask = (taskData) => {
-  const errors = validateTask(taskData);
-  if (errors.length > 0) {
-    throw new Error(`Validation failed: ${errors.join(', ')}`);
-  }
-  
+  // The validation is now handled in the routes using validateTaskCreate
+  // This function expects already validated data
   const newTask = {
     id: taskIdCounter++,
-    title: taskData.title.trim(),
+    title: taskData.title,
     description: taskData.description || '',
     completed: taskData.completed || false,
     userId: taskData.userId,
@@ -67,21 +41,8 @@ const updateTaskById = (id, updateData) => {
   
   const currentTask = tasks[taskIndex];
   
-  // Validate only the fields being updated
-  const fieldsToValidate = {};
-  if (updateData.title !== undefined) fieldsToValidate.title = updateData.title;
-  if (updateData.description !== undefined) fieldsToValidate.description = updateData.description;
-  if (updateData.completed !== undefined) fieldsToValidate.completed = updateData.completed;
-  if (updateData.userId !== undefined) fieldsToValidate.userId = updateData.userId;
-  
-  // Only validate if we have fields to validate and they include required fields
-  if (Object.keys(fieldsToValidate).length > 0) {
-    const validationData = { ...currentTask, ...fieldsToValidate };
-    const errors = validateTask(validationData);
-    if (errors.length > 0) {
-      throw new Error(`Validation failed: ${errors.join(', ')}`);
-    }
-  }
+  // The validation is now handled in the routes using validateTaskUpdate
+  // This function expects already validated data
   
   // Update the task
   const updatedTask = {
@@ -133,6 +94,5 @@ module.exports = {
   deleteTaskById,
   deleteTasksByUserId,
   getTaskCount,
-  getTaskCountByUserId,
-  validateTask
+  getTaskCountByUserId
 };
