@@ -15,7 +15,7 @@ A RESTful API for managing tasks with user authentication, built with Node.js, F
 
 Before running this application, make sure you have:
 
-- **Node.js** (version 14 or higher)
+- **Node.js** (version 18 or higher, Node.js 20 LTS recommended)
 - **npm** (comes with Node.js)
 - **MongoDB** (local installation or MongoDB Atlas)
 
@@ -103,7 +103,7 @@ Once the server is running, you can access the interactive API documentation at:
 
 ### Debug (Development Only)
 
-First, uncomment the line 22 in src/app.js:
+First, uncomment line 22 in src/app.js:
 
 ```js
 // fastify.register(require('./routes/debug'), { prefix: '/api/debug' });
