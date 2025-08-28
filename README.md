@@ -85,6 +85,8 @@ Once the server is running, you can access the interactive API documentation at:
 
 **http://localhost:3000/docs**
 
+![Swagger UI Documentation](assets/example_swagger_ui.png)
+
 ## API Endpoints
 
 ### Authentication
