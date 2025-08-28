@@ -49,7 +49,7 @@ async function routes(fastify, options) {
     }
   }, async (request, reply) => {
     try {
-      const tasks = taskModel.getTasksByUserId(request.user.userId);
+      const tasks = await taskModel.getTasksByUserId(request.user.userId);
       return {
         success: true,
         tasks
@@ -114,7 +114,7 @@ async function routes(fastify, options) {
       // Validate and sanitize task creation data
       const validatedData = validateTaskCreate(request.body, request.user.userId);
       
-      const newTask = taskModel.createTask(validatedData);
+      const newTask = await taskModel.createTask(validatedData);
 
       return reply.status(201).send({
         success: true,
@@ -199,16 +199,16 @@ async function routes(fastify, options) {
     }
   }, async (request, reply) => {
     try {
-      const taskId = parseInt(request.params.id);
+      const taskId = request.params.id;
 
       // Check if task exists and belongs to the user
-      const existingTask = taskModel.getTaskById(taskId);
+      const existingTask = await taskModel.getTaskById(taskId);
       validateTaskOwnership(existingTask, request.user.userId);
 
       // Validate and sanitize update data
       const validatedUpdateData = validateTaskUpdate(request.body);
 
-      const updatedTask = taskModel.updateTaskById(taskId, validatedUpdateData);
+      const updatedTask = await taskModel.updateTaskById(taskId, validatedUpdateData);
 
       return {
         success: true,
@@ -299,13 +299,13 @@ async function routes(fastify, options) {
     }
   }, async (request, reply) => {
     try {
-      const taskId = parseInt(request.params.id);
+      const taskId = request.params.id;
 
       // Check if task exists and belongs to the user
-      const existingTask = taskModel.getTaskById(taskId);
+      const existingTask = await taskModel.getTaskById(taskId);
       validateTaskOwnership(existingTask, request.user.userId);
 
-      const deletedTask = taskModel.deleteTaskById(taskId);
+      const deletedTask = await taskModel.deleteTaskById(taskId);
 
       return {
         success: true,

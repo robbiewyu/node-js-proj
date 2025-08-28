@@ -1,4 +1,5 @@
 const bcrypt = require('bcrypt');
+const mongoose = require('mongoose');
 
 /**
  * Centralized validation functions for business logic
@@ -25,6 +26,10 @@ const isValidBoolean = (value) => {
 
 const isValidNumber = (value) => {
   return typeof value === 'number' && !isNaN(value) && value > 0;
+};
+
+const isValidObjectId = (value) => {
+  return mongoose.Types.ObjectId.isValid(value);
 };
 
 // =============================================================================
@@ -99,8 +104,8 @@ const validateUserLogin = (loginData) => {
 /**
  * Checks if user already exists by email
  */
-const checkUserExists = (userModel, email) => {
-  const existingUser = userModel.getUserByEmail(email);
+const checkUserExists = async (userModel, email) => {
+  const existingUser = await userModel.getUserByEmail(email);
   
   if (existingUser) {
     throw new ValidationError('User with this email already exists');
@@ -111,7 +116,7 @@ const checkUserExists = (userModel, email) => {
  * Validates user credentials for login
  */
 const validateUserCredentials = async (userModel, email, password) => {
-  const user = userModel.getUserByEmail(email);
+  const user = await userModel.getUserByEmail(email);
   
   if (!user) {
     const error = new Error('Invalid email or password');
@@ -160,7 +165,7 @@ const validateTaskCreate = (taskData, userId) => {
     errors.push('Completed must be a boolean');
   }
   
-  if (!isValidNumber(userId)) {
+  if (!isValidObjectId(userId)) {
     errors.push('Valid user ID is required');
   }
   
@@ -221,7 +226,7 @@ const validateTaskOwnership = (task, userId) => {
     throw error;
   }
   
-  if (task.userId !== userId) {
+  if (task.userId.toString() !== userId.toString()) {
     const error = new Error('Access denied: You can only access your own tasks');
     error.statusCode = 403;
     throw error;

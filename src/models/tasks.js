@@ -1,91 +1,90 @@
-// In-memory task storage (replace with a database in production)
-const tasks = [];
-let taskIdCounter = 1;
+const mongoose = require('mongoose');
+
+// Task Schema
+const taskSchema = new mongoose.Schema({
+  title: {
+    type: String,
+    required: true,
+    trim: true
+  },
+  description: {
+    type: String,
+    default: ''
+  },
+  completed: {
+    type: Boolean,
+    default: false
+  },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User',
+    required: true
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now
+  }
+});
+
+// Create Task model
+const Task = mongoose.model('Task', taskSchema);
 
 // Create a new task
-const createTask = (taskData) => {
+const createTask = async (taskData) => {
   // The validation is now handled in the routes using validateTaskCreate
   // This function expects already validated data
-  const newTask = {
-    id: taskIdCounter++,
-    title: taskData.title,
-    description: taskData.description || '',
-    completed: taskData.completed || false,
-    userId: taskData.userId,
-    createdAt: taskData.createdAt || new Date()
-  };
-  
-  tasks.push(newTask);
-  return newTask;
+  const task = new Task(taskData);
+  return await task.save();
 };
 
 // Get all tasks
-const getAllTasks = () => tasks;
+const getAllTasks = async () => {
+  return await Task.find({}).populate('userId', 'email');
+};
 
 // Get tasks by user ID
-const getTasksByUserId = (userId) => {
-  return tasks.filter(task => task.userId === userId);
+const getTasksByUserId = async (userId) => {
+  return await Task.find({ userId }).populate('userId', 'email');
 };
 
 // Get task by ID
-const getTaskById = (id) => {
-  return tasks.find(task => task.id === id);
+const getTaskById = async (id) => {
+  return await Task.findById(id).populate('userId', 'email');
 };
 
 // Update task by ID
-const updateTaskById = (id, updateData) => {
-  const taskIndex = tasks.findIndex(task => task.id === id);
-  if (taskIndex === -1) {
-    return null;
-  }
-  
-  const currentTask = tasks[taskIndex];
-  
+const updateTaskById = async (id, updateData) => {
   // The validation is now handled in the routes using validateTaskUpdate
   // This function expects already validated data
-  
-  // Update the task
-  const updatedTask = {
-    ...currentTask,
-    ...updateData,
-    id: currentTask.id, // Ensure ID cannot be changed
-    createdAt: currentTask.createdAt // Ensure createdAt cannot be changed
-  };
-  
-  tasks[taskIndex] = updatedTask;
-  return updatedTask;
+  return await Task.findByIdAndUpdate(
+    id, 
+    updateData, 
+    { new: true, runValidators: true }
+  ).populate('userId', 'email');
 };
 
 // Delete task by ID
-const deleteTaskById = (id) => {
-  const taskIndex = tasks.findIndex(task => task.id === id);
-  if (taskIndex === -1) {
-    return null;
-  }
-  
-  const deletedTask = tasks[taskIndex];
-  tasks.splice(taskIndex, 1);
-  return deletedTask;
+const deleteTaskById = async (id) => {
+  return await Task.findByIdAndDelete(id).populate('userId', 'email');
 };
 
 // Delete all tasks by user ID
-const deleteTasksByUserId = (userId) => {
-  const userTasks = tasks.filter(task => task.userId === userId);
-  const remainingTasks = tasks.filter(task => task.userId !== userId);
-  tasks.length = 0;
-  tasks.push(...remainingTasks);
-  return userTasks;
+const deleteTasksByUserId = async (userId) => {
+  return await Task.deleteMany({ userId });
 };
 
 // Get task count
-const getTaskCount = () => tasks.length;
+const getTaskCount = async () => {
+  return await Task.countDocuments({});
+};
 
 // Get task count by user ID
-const getTaskCountByUserId = (userId) => {
-  return tasks.filter(task => task.userId === userId).length;
+const getTaskCountByUserId = async (userId) => {
+  return await Task.countDocuments({ userId });
 };
 
 module.exports = {
+  Task,
   createTask,
   getAllTasks,
   getTasksByUserId,

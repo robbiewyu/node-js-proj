@@ -60,23 +60,19 @@ async function routes(fastify, options) {
       const validatedData = validateUserRegistration(request.body);
       
       // Check if user already exists
-      checkUserExists(userModel, validatedData.email);
+      await checkUserExists(userModel, validatedData.email);
 
       // Hash password
       const hashedPassword = await hashPassword(validatedData.password);
 
       // Create new user
-      const newUser = {
-        id: userModel.getUsers().length + 1,
+      const newUser = await userModel.addUser({
         email: validatedData.email,
-        password: hashedPassword,
-        createdAt: validatedData.createdAt
-      };
-
-      userModel.addUser(newUser);
+        password: hashedPassword
+      });
 
       // Return user without password
-      const { password: _, ...userResponse } = newUser;
+      const { password: _, ...userResponse } = newUser.toObject();
 
       return reply.status(201).send({
         success: true,
@@ -152,7 +148,7 @@ async function routes(fastify, options) {
       // Generate JWT token
       const token = jwt.sign(
         { 
-          userId: user.id, 
+          userId: user._id, 
           email: user.email
         },
         JWT_SECRET,
@@ -160,7 +156,7 @@ async function routes(fastify, options) {
       );
 
       // Return user without password
-      const { password: _, ...userResponse } = user;
+      const { password: _, ...userResponse } = user.toObject();
 
       return reply.send({
         success: true,
