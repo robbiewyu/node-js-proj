@@ -26,11 +26,11 @@ async function routes(fastify, options) {
               items: {
                 type: 'object',
                 properties: {
-                  id: { type: 'number' },
+                  _id: { type: 'string' },
                   title: { type: 'string' },
                   description: { type: 'string' },
                   completed: { type: 'boolean' },
-                  userId: { type: 'number' },
+                  userId: { type: 'string' },
                   createdAt: { type: 'string', format: 'date-time' }
                 }
               }
@@ -89,11 +89,11 @@ async function routes(fastify, options) {
             task: {
               type: 'object',
               properties: {
-                id: { type: 'number' },
+                _id: { type: 'string' },
                 title: { type: 'string' },
                 description: { type: 'string' },
                 completed: { type: 'boolean' },
-                userId: { type: 'number' },
+                userId: { type: 'string' },
                 createdAt: { type: 'string', format: 'date-time' }
               }
             }
@@ -155,7 +155,7 @@ async function routes(fastify, options) {
       params: {
         type: 'object',
         properties: {
-          id: { type: 'number', description: 'Task ID' }
+          id: { type: 'string', description: 'Task ID' }
         },
         required: ['id']
       },
@@ -177,11 +177,17 @@ async function routes(fastify, options) {
             task: {
               type: 'object',
               properties: {
-                id: { type: 'number' },
+                _id: { type: 'string' },
                 title: { type: 'string' },
                 description: { type: 'string' },
                 completed: { type: 'boolean' },
-                userId: { type: 'number' },
+                userId: { 
+                  type: 'object',
+                  properties: {
+                    _id: { type: 'string' },
+                    email: { type: 'string' }
+                  }
+                },
                 createdAt: { type: 'string', format: 'date-time' }
               }
             }
@@ -263,7 +269,7 @@ async function routes(fastify, options) {
       params: {
         type: 'object',
         properties: {
-          id: { type: 'number', description: 'Task ID' }
+          id: { type: 'string', description: 'Task ID' }
         },
         required: ['id']
       },
@@ -277,11 +283,17 @@ async function routes(fastify, options) {
             task: {
               type: 'object',
               properties: {
-                id: { type: 'number' },
+                _id: { type: 'string' },
                 title: { type: 'string' },
                 description: { type: 'string' },
                 completed: { type: 'boolean' },
-                userId: { type: 'number' },
+                userId: { 
+                  type: 'object',
+                  properties: {
+                    _id: { type: 'string' },
+                    email: { type: 'string' }
+                  }
+                },
                 createdAt: { type: 'string', format: 'date-time' }
               }
             }

@@ -19,6 +19,7 @@ fastify.register(swaggerUi, {
 // Register routes
 fastify.register(require('./routes/auth'), { prefix: '/api/auth' });
 fastify.register(require('./routes/tasks'), { prefix: '/api/tasks' });
+fastify.register(require('./routes/debug'), { prefix: '/api/debug' });
 
 // Start server
 const start = async () => {

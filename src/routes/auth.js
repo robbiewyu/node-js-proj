@@ -37,7 +37,7 @@ async function routes(fastify, options) {
             user: {
               type: 'object',
               properties: {
-                id: { type: 'number' },
+                _id: { type: 'string' },
                 email: { type: 'string' },
                 createdAt: { type: 'string', format: 'date-time' }
               }
@@ -120,7 +120,7 @@ async function routes(fastify, options) {
             user: {
               type: 'object',
               properties: {
-                id: { type: 'number' },
+                _id: { type: 'string' },
                 email: { type: 'string' },
                 createdAt: { type: 'string', format: 'date-time' }
               }

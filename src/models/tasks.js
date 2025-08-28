@@ -39,17 +39,17 @@ const createTask = async (taskData) => {
 
 // Get all tasks
 const getAllTasks = async () => {
-  return await Task.find({}).populate('userId', 'email');
+  return await Task.find({});
 };
 
 // Get tasks by user ID
 const getTasksByUserId = async (userId) => {
-  return await Task.find({ userId }).populate('userId', 'email');
+  return await Task.find({ userId });
 };
 
 // Get task by ID
 const getTaskById = async (id) => {
-  return await Task.findById(id).populate('userId', 'email');
+  return await Task.findById(id);
 };
 
 // Update task by ID
@@ -60,12 +60,12 @@ const updateTaskById = async (id, updateData) => {
     id, 
     updateData, 
     { new: true, runValidators: true }
-  ).populate('userId', 'email');
+  );
 };
 
 // Delete task by ID
 const deleteTaskById = async (id) => {
-  return await Task.findByIdAndDelete(id).populate('userId', 'email');
+  return await Task.findByIdAndDelete(id);
 };
 
 // Delete all tasks by user ID
